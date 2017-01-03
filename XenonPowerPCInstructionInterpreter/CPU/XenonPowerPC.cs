@@ -7,7 +7,7 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// <summary>
         /// Condition Register (CR) - Conditions of integer arithmetic operations
         /// </summary>
-        public int cr { get; set; }
+        public uint cr { get; set; }
 
         /// <summary>
         /// Integer Exception Register (XER): - Overflow and carry bits
@@ -21,11 +21,21 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         public bool updatecr { get; set; }
 
         /// <summary>
+        /// Update XER flag
+        /// </summary>
+        public bool updateoe { get; set; }
+
+        /// <summary>
         /// Registers for now, might want to make a better way of handling registers in the future but this will do for now
         /// </summary>
         public uint rA { get; set; }
         public uint rB { get; set; }
         public uint rD { get; set; }
+        public uint rS { get; set; }
+        public uint imm { get; set; }
+        public uint SH { get; set; }
+        public uint MB { get; set; }
+        public uint ME { get; set; }
 
         /// <summary>
         /// xer bits:
@@ -35,10 +45,10 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// 3-24 res
         /// 25-31 number of bytes for lswx/stswx
         /// </summary>
-        public const int XER_SO = (1 << 31);
-        public const int XER_OV = (1 << 30);
-        public const int XER_CA = (1 << 29);
-
+        public int XER_SO = (1 << 31);
+        public int XER_OV = (1 << 30);
+        public int XER_CA = (1 << 29);
+        
         /// <summary>
         /// cr0 bits: .68
         /// lt
@@ -46,10 +56,14 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// eq
         /// so
         /// </summary>
-        public const int CR_CR0_LT = (1 << 31);
-        public const int CR_CR0_GT = (1 << 30);
-        public const int CR_CR0_EQ = (1 << 29);
-        public const int CR_CR0_SO = (1 << 28);
+        public int CR_CR0_LT = (1 << 31);
+        public uint CR_CR0_GT = (1 << 30);
+        public uint CR_CR0_EQ = (1 << 29);
+        public uint CR_CR0_SO = (1 << 28);
+
+
+        public int PPC_OPC_OE = (1 << 10);
+        public int PPC_OPC_Rc = 1;
 
         /// <summary>
         /// Initializes the Xenon Power PC CPU
@@ -99,7 +113,7 @@ namespace XenonPowerPCInstructionInterpreter.CPU
             }
             else if (Convert.ToBoolean(r & 0x80000000))
             {
-                cr |= CR_CR0_LT;
+                cr |= (uint)CR_CR0_LT;
             }
             else
             {
@@ -121,54 +135,55 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public bool PPC_OPC_Rc
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Mask
-        /// </summary>
-        /// <param name="mb"></param>
-        /// <param name="me"></param>
-        /// <returns></returns>
-        public uint Mask(int mb, int me)
-        {
-            uint mask;
-            if (mb <= me)
-            {
-                if (me - mb == 31)
-                {
-                    mask = 0xffffffff;
-                }
-                else
-                {
-                    mask = (uint)((1 << (me - mb + 1)) - 1) << (31 - me);
-                }
-            }
-            else
-            {
-                mask = WordRotl((uint)(1 << (32 - mb + me + 1)) - 1, 31 - me);
-            }
-
-            return mask;
-        }
-
-        /// <summary>
         /// Rotate Word Left
         /// </summary>
         /// <param name="data">Data</param>
         /// <param name="n">Shift</param>
         /// <returns>Rotated value</returns>
-        private uint WordRotl(uint data, int n)
+        public uint ppc_word_rotl(uint data, int n)
         {
             n &= 0x1f;
             return (data << n) | (data >> (32 - n));
+        }
+
+        /// <summary>
+        /// Power PC Mask
+        /// </summary>
+        /// <param name="MB"></param>
+        /// <param name="ME"></param>
+        /// <returns></returns>
+        public uint ppc_mask(int MB, int ME)
+        {
+            uint mask;
+            if (MB <= ME)
+            {
+                if (ME - MB == 31)
+                {
+                    mask = 0xffffffff;
+                }
+                else
+                {
+                    mask = (uint)((1 << (ME - MB + 1)) - 1) << (31 - ME);
+                }
+            }
+            else
+            {
+                mask = ppc_word_rotl((uint)(1 << (32 - MB + ME + 1)) - 1, 31 - ME);
+            }
+            return mask;
+        }
+
+        public bool ppc_carry_3(uint a, uint b, uint c)
+        {
+            if ((a + b) < a)
+            {
+                return true;
+            }
+            if ((a + b + c) < c)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
