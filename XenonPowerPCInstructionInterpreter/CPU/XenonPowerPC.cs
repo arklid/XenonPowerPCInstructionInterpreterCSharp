@@ -12,8 +12,8 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// <summary>
         /// Integer Exception Register (XER): - Overflow and carry bits
         /// </summary>
-        public int xer { get; set; }
-        public int xer_ca { get; set; }
+        public uint xer { get; set; }
+        public uint xer_ca { get; set; } // carry from xer
 
         /// <summary>
         /// Update Condition Register flag
@@ -45,9 +45,9 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// 3-24 res
         /// 25-31 number of bytes for lswx/stswx
         /// </summary>
-        public int XER_SO = (1 << 31);
-        public int XER_OV = (1 << 30);
-        public int XER_CA = (1 << 29);
+        public uint XER_SO = unchecked((uint)(1 << 31));
+        public uint XER_OV = (1 << 30);
+        public uint XER_CA = (1 << 29);
         
         /// <summary>
         /// cr0 bits: .68
@@ -56,7 +56,7 @@ namespace XenonPowerPCInstructionInterpreter.CPU
         /// eq
         /// so
         /// </summary>
-        public int CR_CR0_LT = (1 << 31);
+        public uint CR_CR0_LT = unchecked((uint)(1 << 31));
         public uint CR_CR0_GT = (1 << 30);
         public uint CR_CR0_EQ = (1 << 29);
         public uint CR_CR0_SO = (1 << 28);
